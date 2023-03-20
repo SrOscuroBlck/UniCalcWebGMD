@@ -5,8 +5,8 @@ import "./LoginStyle.css";
 
 export const LoginContainer = () => {
   //Context variables
-  const { signUp } = useAuth();
-
+  const { signUp, login } = useAuth();
+  
   // Regex for email and password.
   const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
   const PASSWORD_REGEX = /^(?=.*?[#?!@$%^&/*-])/;
@@ -22,6 +22,8 @@ export const LoginContainer = () => {
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [generalError, setGeneralError] = useState(false);
+  const [fireBaseError, setFireBaseError] = useState("");
+  const [fireBaseNotification, setFireBaseNotification] = useState(false);
 
   // useRef for the the change of the container.
   const [isSignUp, setIsSignUp] = useState(false);
@@ -30,6 +32,29 @@ export const LoginContainer = () => {
     setIsSignUp(!isSignUp);
     if (containerRef.current) {
       containerRef.current.classList.toggle("right-panel-active");
+    }
+  }
+
+  const errorFireBase = (errorCode) =>{
+    switch (errorCode.substr(5)) {
+      case 'ERROR_EMAIL_ALREADY_IN_USE':
+      case 'account-exists-with-different-credential':
+      case 'email-already-in-use':
+        return 'El email esta en uso, prueba con otro o inicia sesión';
+      case 'ERROR_WRONG_PASSWORD':
+      case 'wrong-password':
+        return 'Contraseña erronea';
+      case 'ERROR_USER_NOT_FOUND':
+      case 'user-not-found':
+        return 'Usuario no encontrado';
+      case 'ERROR_INVALID_EMAIL':
+      case 'invalid-email':
+        return 'Email invalido';
+      case 'ERROR_INVALID_PASSWORD':
+      case 'invalid-password':
+        return "Contraseña invalida, debe tener más de 6 caracteres";
+      default:
+        return 'Login fallido, por favor intenta otra vez';
     }
   }
 
@@ -71,22 +96,54 @@ export const LoginContainer = () => {
     // If there is no error, the register is added.
 
     try {
-      await signUp(email, password, userName).finally(() => {
-        setRegisterSuccess(true);
-        setTimeout(() => {
-          setRegisterSuccess(false);
-        }, 5000);
-        setEmail("");
-        setPassword("");
-        setUserName("");
-      });
+      await signUp(email, password, userName)
     } catch (error) {
-      console.log(error);
+      setFireBaseError(errorFireBase(error.code));
+      setFireBaseNotification(true);
+      setTimeout(() => {
+        setFireBaseNotification(false);
+      }, 5000);
+      return
     }
+    setRegisterSuccess(true);
+    setTimeout(() => {
+      setRegisterSuccess(false);
+    }, 5000);
+    setEmail("");
+    setPassword("");
+    setUserName("");
+  };
+
+  const handleSubmmit = async(e) =>{
+    e.preventDefault();
+    try {
+      await login(email, password);
+    } catch (error) {
+      console.log("estoy aqui");
+      setFireBaseError(errorFireBase(error.code));
+      setFireBaseNotification(true);
+      setTimeout(() => {
+        setFireBaseNotification(false);
+      }, 5000);
+      return
+    }
+    setRegisterSuccess(true);
+    setTimeout(() => {
+      setRegisterSuccess(false);
+    }, 5000);
+    setEmail("");
+    setPassword("");
   };
 
   return (
     <>
+      {/* Error FireBase*/}
+      {fireBaseNotification && (
+        <div className="notification" id="warn-notification">
+          {fireBaseError}
+        </div>
+      )}
+
       {/* Error when the password is not properly written */}
       {passwordError && (
         <div className="notification" id="warn-notification">
@@ -131,9 +188,8 @@ export const LoginContainer = () => {
         <center>
           <div className="container" id="RegisterContainer" ref={containerRef}>
             <div
-              className={`form-container ${
-                isSignUp ? "sign-up-container" : "sign-in-container"
-              }`}
+              className={`form-container ${isSignUp ? "sign-up-container" : "sign-in-container"
+                }`}
             >
               <form action="#">
                 <h1>{isSignUp ? "Crea tu Cuenta" : "Inicia Sesión"}</h1>
@@ -178,7 +234,7 @@ export const LoginContainer = () => {
                   <>
                     <a href="#">Olvidaste tu Contraseña?</a>
                     {/* Boton para iniciar sesion*/}
-                    <button>Iniciar Sesión</button>
+                    <button onClick={handleSubmmit}>Iniciar Sesión</button>
                   </>
                 )}
               </form>
