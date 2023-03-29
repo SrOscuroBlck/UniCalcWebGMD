@@ -1,11 +1,14 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import {useNavigate} from "react-router-dom";
 
 import "./LoginStyle.css";
 
 export const LoginContainer = () => {
   //Context variables
   const { signUp, login } = useAuth();
+
+  const navigate = useNavigate();
   
   // Regex for email and password.
   const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -97,6 +100,7 @@ export const LoginContainer = () => {
 
     try {
       await signUp(email, password, userName)
+      navigate("/");
     } catch (error) {
       setFireBaseError(errorFireBase(error.code));
       setFireBaseNotification(true);
@@ -118,6 +122,7 @@ export const LoginContainer = () => {
     e.preventDefault();
     try {
       await login(email, password);
+      navigate("/");
     } catch (error) {
       console.log("estoy aqui");
       setFireBaseError(errorFireBase(error.code));
