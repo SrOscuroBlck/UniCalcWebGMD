@@ -1,4 +1,7 @@
 import { useAuth } from "../../contexts/AuthContext";
+import Sidebar from "./SideBar/SidebBar";
+import "./Home.css";
+import Navbar from "./NavBar/NavBar";
 
 function HomeContainer() {
 
@@ -13,12 +16,15 @@ function HomeContainer() {
   if (loading) return <h1>Loading...</h1>
 
   return (
-    <div>
-      <h1>Welcome {user.email}</h1>
-
-      <button onClick={handleLogout}>Logout</button>
-
-    </div>
+    <>
+      <Sidebar user = {user} />
+      <section id="wrapper">
+        <Navbar/>
+      </section>
+      <div>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+    </>
   );
 }
 
